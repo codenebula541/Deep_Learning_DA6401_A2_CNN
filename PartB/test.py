@@ -1,4 +1,15 @@
 # import the GoogLeNetFineTuner() from the googlrNet_model.py
+
+import os
+import torch
+from torch.utils.data import DataLoader
+from torchvision import datasets, transforms
+import wandb
+
+from sklearn.metrics import accuracy_score
+
+# Import your custom GoogLeNet fine-tuner
+from googleNet_model import GoogLeNetFineTuner
 # 1. --- WANDB: Join existing sweep run ---
 wandb.init(project="DA6401-A2_ET", id="0iqruv2s", resume="allow")  # or "must" to force resume
 
