@@ -2,12 +2,12 @@
 # 1. --- WANDB: Join existing sweep run ---
 wandb.init(project="DA6401-A2_ET", id="0iqruv2s", resume="allow")  # or "must" to force resume
 
-# 2. --- Load the model from checkpoint ---
+# 2. --- Load the model from checkpoint i.e. epoch where model performed best ---
 ckpt_path = "/kaggle/input/best-weights/best-weights-epoch01-val_acc0.7752.ckpt"
 model = GoogLeNetFineTuner.load_from_checkpoint(ckpt_path)
 model.eval().cuda()  # Send to GPU
 
-# 3. --- Load your test dataset ---
+# 3. --- trasform the test iage ---
 test_transform = transforms.Compose([
     transforms.Resize((224, 224)),
     transforms.ToTensor(),
@@ -31,7 +31,7 @@ with torch.no_grad():
 
 # 5. --- Calculate and log test accuracy ---
 test_acc = accuracy_score(all_targets, all_preds)
-print(f"✅ Test Accuracy: {test_acc:.4f}")
+print(f" Test Accuracy: {test_acc:.4f}")
 
 wandb.log({"test_acc": test_acc})
 wandb.finish()
