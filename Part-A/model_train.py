@@ -10,8 +10,6 @@ from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint
 import wandb
 from pytorch_lightning.loggers import WandbLogger
 
-from FlexibleCNN import FlexibleCNN  
-
 # Define training transformations based on config
 def get_train_transforms(config):
     transform_list = []
