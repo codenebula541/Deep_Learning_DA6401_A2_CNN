@@ -5,7 +5,7 @@ from pytorch_lightning import Trainer
 from pytorch_lightning.loggers import WandbLogger
 import wandb
 
-
+from modelClass import FlexibleCNN
 
 # second best performing model configuration having val_acc of 41%
 # manual_config = {
