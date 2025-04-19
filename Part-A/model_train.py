@@ -59,7 +59,7 @@ def get_val_transforms(config):
 
     return transforms.Compose(transform_list)
 
-
+#train_dir, val_dir = create_stratified_dataset("/content/drive/MyDrive/DL_assignment3_data/inaturalist_12K/train")
 # Set the train and validation directories manually:
 train_dir = "/content/drive/MyDrive/DL_assignment3_data/inaturalist_12K/stratified_dataset/train"
 val_dir = "/content/drive/MyDrive/DL_assignment3_data/inaturalist_12K/stratified_dataset/val"
