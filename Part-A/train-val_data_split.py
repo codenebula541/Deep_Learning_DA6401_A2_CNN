@@ -1,3 +1,4 @@
+# only use this code when data spliting is required in 80-20 i.e. train-val
 import os
 import shutil
 from sklearn.model_selection import train_test_split
