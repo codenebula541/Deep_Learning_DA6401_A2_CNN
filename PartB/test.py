@@ -1,4 +1,4 @@
-
+# import the GoogLeNetFineTuner() from the googlrNet_model.py
 # 1. --- WANDB: Join existing sweep run ---
 wandb.init(project="DA6401-A2_ET", id="0iqruv2s", resume="allow")  # or "must" to force resume
 
