@@ -183,18 +183,28 @@ A PyTorch Lightning implementation for fine-tuning GoogleNet using gradual unfre
 
 
 ---
-### Performance:  
-- Validation Accuracy: 77.52%
-- Test Accuracy: 72 %
-  
+### Tuning:
+```bash
+python train.py
+```
+-Implements phased unfreezing with WandB logging
+-Saves best checkpoint based on validation accuracy
+-Early stopping with 6-epoch patience  
+---
+
 ### Testing:
 ```bash
 python test.py --checkpoint /path/to/best-weights.ckpt
 ```
--Loads best model checkpoint
+- Loads best model checkpoint
 - Evaluates on test set
 - Logs final accuracy to WandB
-- In my case Test Accuracy: 72 % is achieved.
+---
+
+### Performance:  
+- Validation Accuracy: 77.52%
+- Test Accuracy: 72 %
+
 
 
 
