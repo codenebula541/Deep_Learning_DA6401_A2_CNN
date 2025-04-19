@@ -14,7 +14,7 @@ A modular and flexible CNN training framework has been implemented for image cla
 
 ## Features
 
-### 🧠  Configurable CNN Model class
+###  Configurable CNN Model class
 - **Adjustable Filter Organization**  
   - Options: `same`, `doubling`, `halving`
 
