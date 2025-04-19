@@ -148,7 +148,56 @@ manual_config = {
 ```
 ---
 # Part B: Fine tuning a pretrained image classification model.  
-For this problem, pretrained models such as GoogLeNet, InceptionV3, ResNet50, VGG, EfficientNetV2, VisionTransformer etc. can used as base models and the user can choose between these models. In present case, i have used GoogLeNet. The user can also choose to freeze all the layers and make them non trainable and only train the newly added dense layers compatible with the number of classes in the dataset. In my case the dense layers were swapped with the output layer having 10 softmax neurons. Gradual Unfreezing (unfreeze layers in stages) + Discriminative Learning Rates (different LRs per layer) till inception4c block was unfreezed for tuning the pre-trained model.
+For this problem, pretrained models such as GoogLeNet, InceptionV3, ResNet50, VGG, EfficientNetV2, VisionTransformer etc. can used as base models and the user can choose between these models. In present case, i have used GoogLeNet. The user can also choose to freeze all the layers and make them non trainable and only train the newly added dense layers compatible with the number of classes in the dataset. In my case the dense layers were swapped with the output layer having 10 softmax neurons. Gradual Unfreezing (unfreeze layers in stages) + Discriminative Learning Rates (different LRs per layer) till inception4c block was unfreezed for tuning the pre-trained model.  
+
+
+A PyTorch Lightning implementation for fine-tuning GoogleNet using gradual unfreezing and discriminative learning rates on image classification tasks. Achieves 77.52% validation accuracy through phased layer unfreezing and per-block learning rate optimization.  
+
+### Key features:  
+- Gradual Unfreezing Strategy:
+  Unfreezes network blocks in reverse order:
+  ```bash
+  inception5b → inception5a → inception4e → inception4d → inception4c
+  ```
+- Discriminative Learning Rates:
+  Layer-specific learning rates:
+  ```bash
+  Head (fc):     1e-3
+  Later blocks:  1e-4
+  Middle blocks: 1e-5 
+  Early blocks:  1e-6
+  ```
+- Training Phases:
+  1. Head Training: 5 epochs with frozen backbone  
+  2. Progressive Unfreezing: 3 epochs per unfrozen block
+
+---
+
+## Code Structure
+
+| File              | Purpose                                                                 |
+|-------------------|-------------------------------------------------------------------------|
+| `googleNet_model.py` | Contains the PyTorch Lightning module defining GoogLeNet, training/validation steps, and optimizer with discriminative LRs. |
+| `train.py`        | Executes training with gradual unfreezing. Integrates with Weights & Biases for tracking. |
+| `test.py`         | Evaluates model performance on the test set after training. |
+
+
+---
+### Performance:  
+- Validation Accuracy: 77.52%
+- Test Accuracy: 72 %
+  
+### Testing:
+```bash
+python test.py --checkpoint /path/to/best-weights.ckpt
+```
+-Loads best model checkpoint
+- Evaluates on test set
+- Logs final accuracy to WandB
+- In my case Test Accuracy: 72 % is achieved.
+
+
+
 
 
 
