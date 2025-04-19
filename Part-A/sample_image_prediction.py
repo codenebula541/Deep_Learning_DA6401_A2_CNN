@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import torch
 from torchvision import datasets, transforms
 
-# ---- Model config ----
+# ---- best Model config ----
 manual_config = {
     "base_filters": 64,
     "filter_organization": "same",
@@ -23,7 +23,7 @@ manual_config = {
     "weight_decay": 0.0001
 }
 
-ckpt_path = "/content/best-epoch=13-val_acc=0.431.ckpt"
+ckpt_path = "/content/best-epoch=13-val_acc=0.431.ckpt"   # weigth and bias parameters of best model
 test_root = "/content/drive/MyDrive/DL_assignment3_data/inaturalist_12K/test"
 
 # ---- Load model ----
