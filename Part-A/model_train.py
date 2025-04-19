@@ -1,33 +1,56 @@
+from torchvision import transforms
+#import torchmetrics
+
+def get_train_transforms(config):
+    transform_list = []
+
+    # Always resize to (224, 224)
+    transform_list.append(transforms.Resize((224, 224)))
+
+    # If augmentation is enabled in the config, add augmentation transforms
+    if config.get("augmentation", False):
+        transform_list.extend([
+            transforms.RandomHorizontalFlip(),
+            transforms.RandomRotation(20),
+            transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2),
+            transforms.RandomResizedCrop(224, scale=(0.8, 1.0))
+        ])
+
+    # Convert image to Tensor (normalizes pixel values to [0, 1])
+    transform_list.append(transforms.ToTensor())
+
+    # If normalization is enabled, add normalization transform (commonly used for pretrained networks)
+    if config.get("normalize", False):
+        transform_list.append(transforms.Normalize(
+            mean=[0.485, 0.456, 0.406],
+            std=[0.229, 0.224, 0.225]
+        ))
+
+    # Combine all transformations into one pipeline
+    return transforms.Compose(transform_list)
+
+
+def get_val_transforms(config):
+    transform_list = [
+        # Resize all validation images to (224, 224)
+        transforms.Resize((224, 224)),
+        transforms.ToTensor()
+    ]
+
+    # Add normalization if enabled
+    if config.get("normalize", False):
+        transform_list.append(transforms.Normalize(
+            mean=[0.485, 0.456, 0.406],
+            std=[0.229, 0.224, 0.225]
+        ))
+
+    return transforms.Compose(transform_list)
+
+
 # Set the train and validation directories manually:
 train_dir = "/content/drive/MyDrive/DL_assignment3_data/inaturalist_12K/stratified_dataset/train"
 val_dir = "/content/drive/MyDrive/DL_assignment3_data/inaturalist_12K/stratified_dataset/val"
 
-sweep_config = {
-    'name': "cnn-sweep",
-    'method': 'bayes',
-    'metric': {
-        'name': 'val_acc',
-        'goal': 'maximize'
-    },
-    'parameters': {
-    'base_filters': {'values': [16,32, 64]},
-    'filter_organization': {'values': ["same", "doubling", "halving"]},
-    'conv_activation': {'values': ["relu", "gelu", "mish", "silu"]},
-    'batch_norm': {'values': [True, False]},
-    'bn_position': {'values': ["before", "after"]},
-    'conv_dropout': {'values': [0.0]},
-    'dense_units': {'values': [128, 256, 512]},
-    'dense_dropout': {'values': [0.0, 0.2, 0.3]},
-    'learning_rate': {'values': [1e-4, 5e-4, 1e-3, 5e-3, 1e-2]},
-    'batch_size': {'values': [32, 64, 128]},
-    'augmentation': {'values': [True, False]},
-    'weight_decay': {'values': [0, 1e-4, 1e-3]},
-    'kernel_size': {'values': [3, 5]}
-    }
-}
-
-
-sweep_id = wandb.sweep(sweep_config, project="DA6401-A2_ET")
 # Set your manual config here
 manual_config = {
     "base_filters": 32,
@@ -142,6 +165,7 @@ def run_experiment(use_manual_config=False):
         wandb.run.summary["best_val_acc"] = checkpoint_callback.best_model_score
 
         run.finish()
-
+        
+sweep_id = wandb.sweep(sweep_config, project="DA6401-A2_ET")
 run_experiment(use_manual_config=True)
-wandb.agent("sweep_id", run_experiment, project="DA6401-A2_ET", count=30)
+wandb.agent("sweep_id", run_experiment, project="DA6401-A2_ET", count=1)
