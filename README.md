@@ -189,7 +189,7 @@ A PyTorch Lightning implementation for fine-tuning GoogleNet using gradual unfre
 ```bash
 python train.py
 ```
--Implements phased unfreezing with WandB logging
+- Implements phased unfreezing with WandB logging
 -Saves best checkpoint based on validation accuracy
 -Early stopping with 6-epoch patience  
 ---
