@@ -4,6 +4,7 @@ from PIL import Image
 import matplotlib.pyplot as plt
 import torch
 from torchvision import datasets, transforms
+from modelClass import FlexibleCNN 
 
 # ---- best Model config ----
 manual_config = {
