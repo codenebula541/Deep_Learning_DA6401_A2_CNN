@@ -1,5 +1,5 @@
-# Cell 4: Utility to unfreeze specific blocks
-
+# Function to unfreeze specific blocks
+# import the GoogLeNetFineTuner() from the googlrNet_model.py
 def unfreeze_layers(pl_module, layer_names):
     """
     Given our LightningModule instance, set requires_grad=True 
@@ -10,7 +10,7 @@ def unfreeze_layers(pl_module, layer_names):
             for p in module.parameters():
                 p.requires_grad = True
 
-# Cell 0: define a “grid” sweep with exactly one choice per param
+# define a “grid” sweep with exactly one choice per param since here we not required any hyperparameter. only discriminative learning we are doing for tuning purpose
 
 
 fixed_config = {
@@ -20,7 +20,7 @@ fixed_config = {
     "lr_early":  1e-6,
 }
 
-sweep_config = {
+sweep_config = {      # want to log into the wandb hence using sweep_config mode
     'name': "tune-sweep1",
     "method": "grid",    # grid with one point = no real search
     "metric": {"name": "val_acc", "goal": "maximize"},
@@ -87,6 +87,6 @@ def train():
             
     # Save best model to wandb
     wandb.save(checkpoint_cb.best_model_path)
-    print(f"✅ Best model saved at: {checkpoint_cb.best_model_path}")
+    print(f"Best model saved at: {checkpoint_cb.best_model_path}")
 
-wandb.agent("0iqruv2s", function= train, project="DA6401-A2_ET", count=1)
+wandb.agent("sweep-id", function= train, project="DA6401-A2_ET", count=1)
