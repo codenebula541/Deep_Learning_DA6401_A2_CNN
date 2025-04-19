@@ -4,77 +4,73 @@ import torch.nn.functional as F
 import pytorch_lightning as pl
 import torchmetrics
 
-
 class FlexibleCNN(pl.LightningModule):
     def __init__(self, config):
         super().__init__()
         self.save_hyperparameters()
         self.config = config
 
-        # Build convolutional blocks
+        # Create a list to store convolutional blocks
         self.conv_blocks = nn.ModuleList()
-        in_channels = 3  # Input channels (RGB)
+        in_channels = 3  # Input channels for RGB images
 
-        # Generate filter sequence based on organization
+        # Generate a sequence of filter sizes based on the organization strategy
         self.filters = self._generate_filters(
-            self.config["base_filters"],      #base_filters might be something like 32. first layer filter value
-            self.config["filter_organization"] #filter_organization might be "doubling".
-
+            self.config["base_filters"],
+            self.config["filter_organization"]
         )
 
-        # Create convolutional blocks with configurable BN position
-        #
+        # Build each convolutional block
         for i, out_channels in enumerate(self.filters):
-            block_layers = []     #dynamically create a list named block_layers, which contains various neural network layers such as convolutional layers, normalization layers, activation functions, pooling layers, and dropout layers.
+            block_layers = []  # List to hold layers of this block
 
-            # 1. Convolution layer
+            # Add convolution layer
             block_layers.append(
                 nn.Conv2d(in_channels, out_channels,
                          kernel_size=config["kernel_size"],
                          padding="same")
             )
 
-            # 2. BatchNorm and Activation order
+            # Add BatchNorm before activation if configured
             if config["batch_norm"] and config["bn_position"] == "before":
                 block_layers.append(self._get_normalization(out_channels))
 
+            # Add activation function
             block_layers.append(self._get_activation(config["conv_activation"]))
 
+            # Add BatchNorm after activation if configured
             if config["batch_norm"] and config["bn_position"] == "after":
                 block_layers.append(self._get_normalization(out_channels))
 
-            # 3. Pooling and Dropout
+            # Add pooling and dropout
             block_layers.extend([
                 nn.MaxPool2d(2, 2),
                 self._get_dropout(config["conv_dropout"])
             ])
 
+            # Append this block to the list of convolutional blocks
             self.conv_blocks.append(nn.Sequential(*block_layers))
-            in_channels = out_channels
-        #self.conv_blocks is a nn.ModuleList that contains multiple nn.Sequential blocks — and each of those Sequential blocks is made from a custom block_layers list.
+            in_channels = out_channels  # Update input channels for next block
 
-        # Calculate flattened size dynamically
-        self.flattened_size = self._calculate_flattened_size()    #flattening operation is applied to the output of the last convolutional block (after the dropout layer, if used) in your forward pass before passing it to your dense (classifier) layers
+        # Dynamically calculate the size of the flattened feature map
+        self.flattened_size = self._calculate_flattened_size()
 
-        # Create classifier head
+        # Define the classifier head
         self.classifier = nn.Sequential(
             nn.Linear(self.flattened_size, config["dense_units"]),
             self._get_activation(config["dense_activation"]),
             self._get_dropout(config["dense_dropout"]),
-            nn.Linear(config["dense_units"], 10)
+            nn.Linear(config["dense_units"], 10)  # Output layer for 10 classes
         )
 
-
-        # Loss function
+        # Define loss function
         self.loss_fn = nn.CrossEntropyLoss()
 
-        # Accuracy metrics
-
+        # Define metrics for training and validation accuracy
         self.train_accuracy = torchmetrics.classification.Accuracy(task="multiclass", num_classes=10)
         self.val_accuracy = torchmetrics.classification.Accuracy(task="multiclass", num_classes=10)
 
-
-
+    # Generate list of output filters for conv layers
     def _generate_filters(self, base, organization):
         if organization == "same":
             return [base] * 5
@@ -85,6 +81,7 @@ class FlexibleCNN(pl.LightningModule):
         else:
             raise ValueError(f"Unknown filter organization: {organization}")
 
+    # Return the chosen activation function
     def _get_activation(self, name):
         activations = {
             "relu": nn.ReLU(),
@@ -95,31 +92,34 @@ class FlexibleCNN(pl.LightningModule):
         }
         return activations.get(name.lower(), nn.ReLU())
 
+    # Return BatchNorm layer if enabled, else identity
     def _get_normalization(self, channels):
         if self.config["batch_norm"]:
             return nn.BatchNorm2d(channels)
         return nn.Identity()
 
+    # Return dropout layer if rate > 0, else identity
     def _get_dropout(self, rate):
         if rate and rate > 0:
             return nn.Dropout(rate)
         return nn.Identity()
 
-    def _calculate_flattened_size(self):      #flattening the output of the last convolutional block.
-        dummy_input = torch.randn(1, 3, 224, 224)  # Standard image size
+    # Calculate the size of the flattened output after all conv layers
+    def _calculate_flattened_size(self):
+        dummy_input = torch.randn(1, 3, 224, 224)  # Simulate a dummy input
         with torch.no_grad():
             for block in self.conv_blocks:
                 dummy_input = block(dummy_input)
         return dummy_input.flatten(1).size(1)
 
-
+    # Forward pass through convolutional blocks and classifier
     def forward(self, x):
         for block in self.conv_blocks:
             x = block(x)
         x = x.flatten(1)
         return self.classifier(x)
 
-
+    # Training step logic
     def training_step(self, batch, batch_idx):
         x, y = batch
         preds = self(x)
@@ -131,6 +131,7 @@ class FlexibleCNN(pl.LightningModule):
 
         return loss
 
+    # Validation step logic
     def validation_step(self, batch, batch_idx):
         x, y = batch
         preds = self(x)
@@ -140,6 +141,7 @@ class FlexibleCNN(pl.LightningModule):
         self.log("val_loss", loss, on_epoch=True, prog_bar=True)
         self.log("val_acc", acc, on_epoch=True, prog_bar=True)
 
+    # Optimizer configuration
     def configure_optimizers(self):
         return torch.optim.Adam(
         self.parameters(),
@@ -147,25 +149,23 @@ class FlexibleCNN(pl.LightningModule):
         weight_decay=self.config["weight_decay"]
     )
 
+    # Test step logic
     def test_step(self, batch, batch_idx):
         x, y = batch
         preds = self(x)
         loss = F.cross_entropy(preds, y)
-        acc = self.val_accuracy(preds, y)  # Reuse validation accuracy metric
+        acc = self.val_accuracy(preds, y)
 
         self.log("test_loss", loss, on_epoch=True, prog_bar=True)
         self.log("test_acc", acc, on_epoch=True, prog_bar=True)
-        #return loss
 
-
-
-    # # These hooks are called at the end of each training/validation epoch.
+    # Log training metrics at end of epoch
     def on_train_epoch_end(self):
-         # Retrieve the logged metrics (averaged over the epoch)
          train_loss = self.trainer.callback_metrics.get("train_loss")
          train_acc = self.trainer.callback_metrics.get("train_acc")
          print(f"Epoch {self.current_epoch}: Train Loss: {train_loss:.4f}, Train Acc: {train_acc:.4f}")
 
+    # Log validation metrics at end of epoch
     def on_validation_epoch_end(self):
          val_loss = self.trainer.callback_metrics.get("val_loss")
          val_acc = self.trainer.callback_metrics.get("val_acc")
