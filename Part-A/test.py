@@ -7,7 +7,7 @@ import wandb
 
 
 
-# second best performing model
+# second best performing model configuration having val_acc of 41%
 # manual_config = {
 #     "base_filters": 32,
 #     "filter_organization": "doubling",
@@ -26,7 +26,7 @@ import wandb
 # }
 
 
-# best model
+# best model configuration having val_acc of 43.6%
 manual_config = {
     "base_filters": 64,
     "filter_organization": "same",
