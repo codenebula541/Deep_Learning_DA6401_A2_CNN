@@ -1,9 +1,3 @@
-import torch
-import torch.nn as nn
-import torch.nn.functional as F
-import pytorch_lightning as pl
-from torchvision import transforms
-
 class FlexibleCNN(pl.LightningModule):
     def __init__(self, config):
         super().__init__()
@@ -68,7 +62,7 @@ class FlexibleCNN(pl.LightningModule):
         self.loss_fn = nn.CrossEntropyLoss()
 
         # Accuracy metrics
-        
+
         self.train_accuracy = torchmetrics.classification.Accuracy(task="multiclass", num_classes=10)
         self.val_accuracy = torchmetrics.classification.Accuracy(task="multiclass", num_classes=10)
 
@@ -140,19 +134,32 @@ class FlexibleCNN(pl.LightningModule):
         self.log("val_acc", acc, on_epoch=True, prog_bar=True)
 
     def configure_optimizers(self):
-        return torch.optim.Adam(self.parameters(), lr=0.001)
+        return torch.optim.Adam(
+        self.parameters(),
+        lr=self.config["learning_rate"],
+        weight_decay=self.config["weight_decay"]
+    )
+
+    def test_step(self, batch, batch_idx):
+        x, y = batch
+        preds = self(x)
+        loss = F.cross_entropy(preds, y)
+        acc = self.val_accuracy(preds, y)  # Reuse validation accuracy metric
+
+        self.log("test_loss", loss, on_epoch=True, prog_bar=True)
+        self.log("test_acc", acc, on_epoch=True, prog_bar=True)
+        #return loss
+
 
 
     # # These hooks are called at the end of each training/validation epoch.
-    # def on_train_epoch_end(self):
-    #     # Retrieve the logged metrics (averaged over the epoch)
-    #     train_loss = self.trainer.callback_metrics.get("train_loss")
-    #     train_acc = self.trainer.callback_metrics.get("train_acc")
-    #     print(f"Epoch {self.current_epoch}: Train Loss: {train_loss:.4f}, Train Acc: {train_acc:.4f}")
+    def on_train_epoch_end(self):
+         # Retrieve the logged metrics (averaged over the epoch)
+         train_loss = self.trainer.callback_metrics.get("train_loss")
+         train_acc = self.trainer.callback_metrics.get("train_acc")
+         print(f"Epoch {self.current_epoch}: Train Loss: {train_loss:.4f}, Train Acc: {train_acc:.4f}")
 
-    # def on_validation_epoch_end(self):
-    #     val_loss = self.trainer.callback_metrics.get("val_loss")
-    #     val_acc = self.trainer.callback_metrics.get("val_acc")
-    #     print(f"Epoch {self.current_epoch}: Val Loss: {val_loss:.4f}, Val Acc: {val_acc:.4f}")
-
-
+    def on_validation_epoch_end(self):
+         val_loss = self.trainer.callback_metrics.get("val_loss")
+         val_acc = self.trainer.callback_metrics.get("val_acc")
+         print(f"Epoch {self.current_epoch}: Val Loss: {val_loss:.4f}, Val Acc: {val_acc:.4f}")
