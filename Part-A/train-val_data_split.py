@@ -31,9 +31,3 @@ def create_stratified_dataset(root_dir, val_ratio=0.2, seed=42):
     return os.path.join(new_root, "train"), os.path.join(new_root, "val")
 
 
-
-# Split your dataset
-
-train_dir, val_dir = create_stratified_dataset("/content/drive/MyDrive/DL_assignment3_data/inaturalist_12K/train")
-
-
